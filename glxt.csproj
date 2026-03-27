@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <!-- 保持原有项目设置 -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 为冲突的 BCrypt 包分别指定别名，使用 extern alias 在代码中选择其中一个 -->
+    <PackageReference Include="BCrypt.Net-Core" Version="1.6.0">
+      <Aliases>BCORE</Aliases>
+    </PackageReference>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.2">
+      <Aliases>BNEXT</Aliases>
+    </PackageReference>
+
+    <!-- 其他 PackageReference 保持不变 -->
+  </ItemGroup>
+</Project>

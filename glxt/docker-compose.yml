@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # Web API 服务
+  glxt-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: glxt-api
+    ports:
+      - "5000:8080"  # HTTP
+      - "5001:8081"  # HTTPS
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      # 数据库连接字符串 - 指向 SQL Server 容器
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=GlxtDb;User Id=sa;Password=Sym89@789Ab;TrustServerCertificate=True;
+      # JWT 配置
+      - Jwt__Key=glxt_Jwt_Secret_Key_2024_Sym89_Production_32Chars_Min
+      - Jwt__Issuer=GlxtApi
+      - Jwt__Audience=GlxtClient
+      - Jwt__ExpireMinutes=60
+    depends_on:
+      - sqlserver
+    networks:
+      - glxt-network
+    restart: unless-stopped
+
+  # SQL Server 服务
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: glxt-sqlserver
+    ports:
+      - "1433:1433"
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Sym89@789Ab
+      - MSSQL_PID=Express
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    networks:
+      - glxt-network
+    restart: unless-stopped
+    healthcheck:
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P YourStrong@Password123 -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+networks:
+  glxt-network:
+    driver: bridge
+
+volumes:
+  sqlserver-data:
+    driver: local
