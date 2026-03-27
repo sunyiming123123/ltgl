@@ -1,79 +1,149 @@
-# 🚀 一键部署完全指南
+# GLXT 部署指南 - 阿里云 Alibaba Cloud Linux 3
 
-服务器: **139.224.245.244** (阿里云)
+## 🚀 最简单的部署方式（一键部署）
+
+### 第一步：连接到服务器
+
+```bash
+ssh root@你的服务器IP
+```
+
+### 第二步：克隆项目
+
+```bash
+# 首次部署
+git clone https://gitee.com/19145960820/GLXT.git
+cd GLXT/glxt
+```
+
+### 第三步：执行一键部署脚本
+
+```bash
+# 给脚本执行权限
+chmod +x deploy.sh
+
+# 运行一键部署
+bash deploy.sh
+```
+
+**就这么简单！** 脚本会自动：
+- ✅ 安装 Docker 和 Docker Compose
+- ✅ 构建项目镜像
+- ✅ 启动所有服务（Web API + SQL Server）
+- ✅ 显示服务状态和日志
 
 ---
 
-## 📋 部署前准备（5 分钟）
+## 📋 部署后操作
 
-### ✅ 1. 确保本地有 SSH 客户端
+### 1. 开放端口（阿里云安全组）
 
-**Windows 10/11** 已内置，测试一下：
+登录 [阿里云控制台](https://ecs.console.aliyun.com/) → 安全组 → 配置规则：
 
-```powershell
-ssh
+| 端口范围 | 授权对象 | 说明 |
+|---------|---------|------|
+| 5000/5000 | 0.0.0.0/0 | HTTP 访问 |
+| 5001/5001 | 0.0.0.0/0 | HTTPS 访问 |
+| 1433/1433 | 0.0.0.0/0 | SQL Server（可选，仅测试时开放）|
+
+### 2. 访问应用
+
 ```
-
-如果提示 `usage: ssh ...` 说明已安装。
-
-### ✅ 2. 测试 SSH 连接
-
-```powershell
-ssh root@139.224.245.244
-# 输入密码后，如果能登录说明连接正常
-# 输入 exit 退出
-```
-
-### ✅ 3. 配置阿里云安全组（重要！）
-
-**📖 详细步骤请查看：`ALIYUN-SECURITY-GROUP.md`**
-
-必须开放端口 **5000**，否则无法从外网访问 API！
-
----
-
-## 🚀 一键部署（3 步）
-
-### 步骤 1: 进入项目目录
-
-打开 **PowerShell**（右键管理员模式），运行：
-
-```powershell
-# 替换成您的实际项目路径
-cd D:\projects\glxt
-```
-
-### 步骤 2: 运行部署脚本
-
-```powershell
-.\deploy-to-server.ps1
-```
-
-**脚本会自动完成：**
-- ✅ 在服务器上安装 Docker
-- ✅ 上传项目文件
-- ✅ 构建 Docker 镜像
-- ✅ 启动容器（API + SQL Server）
-- ✅ 运行数据库迁移
-
-**预计时间：5-10 分钟（首次运行需要下载镜像）**
-
-### 步骤 3: 验证部署
-
-```powershell
-.\verify-deployment.ps1
-```
-
-**看到以下输出说明成功：**
-```
-✅ API 可访问 (状态码: 200)
-✅ 注册成功
-✅ 登录成功！
+http://你的服务器IP:5000
 ```
 
 ---
 
-## 🌐 访问您的 API
+## 🔧 常用命令
+
+```bash
+# 查看实时日志
+docker-compose logs -f
+
+# 查看 API 日志
+docker-compose logs -f glxt-api
+
+# 重启服务
+docker-compose restart
+
+# 停止服务
+docker-compose stop
+
+# 启动服务
+docker-compose start
+
+# 完全卸载
+docker-compose down -v
+```
+
+---
+
+## 🔄 更新部署
+
+当代码有更新时：
+
+```bash
+# 进入项目目录
+cd /root/GLXT/glxt
+
+# 重新运行部署脚本
+bash deploy.sh
+```
+
+就这么简单！脚本会自动拉取最新代码并重新部署。
+
+---
+
+## 🐛 故障排查
+
+### 查看服务状态
+```bash
+docker-compose ps
+```
+
+### 查看详细日志
+```bash
+docker-compose logs --tail=100
+```
+
+### 重新构建
+```bash
+docker-compose down
+docker-compose up -d --build --force-recreate
+```
+
+### 进入容器调试
+```bash
+# 进入 API 容器
+docker exec -it glxt-api bash
+
+# 进入数据库容器
+docker exec -it glxt-sqlserver bash
+```
+
+---
+
+## 📦 包含的服务
+
+- **glxt-api**: Web API 服务（端口 5000, 5001）
+- **glxt-sqlserver**: SQL Server 2022 Express（端口 1433）
+
+---
+
+## ⚠️ 生产环境建议
+
+1. **修改数据库密码**: 编辑 `docker-compose.yml` 中的 `SA_PASSWORD`
+2. **使用 HTTPS**: 配置 SSL 证书
+3. **备份数据库**: 定期备份 SQL Server 数据
+4. **限制端口访问**: 仅开放必要端口给特定IP
+
+---
+
+## 💡 提示
+
+- 首次启动需要下载镜像，可能需要几分钟
+- SQL Server 需要至少 2GB 内存
+- 数据持久化在 Docker volume 中，重启不会丢失数据
 
 部署成功后：
 
